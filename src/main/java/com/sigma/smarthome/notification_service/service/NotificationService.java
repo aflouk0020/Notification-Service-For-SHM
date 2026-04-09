@@ -1,12 +1,14 @@
 package com.sigma.smarthome.notification_service.service;
 
 import com.sigma.smarthome.notification_service.entity.Notification;
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.UUID;
 
 public interface NotificationService {
 
     Notification createNotification(Notification notification);
 
-    List<Notification> getNotificationsByUser(UUID userId);
+    Page<Notification> getNotificationsByUser(UUID userId, Pageable pageable);
 }

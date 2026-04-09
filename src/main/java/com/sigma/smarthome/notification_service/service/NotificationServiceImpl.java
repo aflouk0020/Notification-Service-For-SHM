@@ -2,9 +2,10 @@ package com.sigma.smarthome.notification_service.service;
 
 import com.sigma.smarthome.notification_service.entity.Notification;
 import com.sigma.smarthome.notification_service.repository.NotificationRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -22,7 +23,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public List<Notification> getNotificationsByUser(UUID userId) {
-        return repository.findByUserIdOrderByCreatedAtDesc(userId);
+    public Page<Notification> getNotificationsByUser(UUID userId, Pageable pageable) {
+        return repository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
     }
 }
