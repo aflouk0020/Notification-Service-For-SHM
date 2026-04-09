@@ -8,13 +8,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -27,8 +30,8 @@ class NotificationServiceTest {
     @InjectMocks
     private NotificationServiceImpl notificationService;
 
-    private UUID userId;
     private Notification notification;
+    private UUID userId;
 
     @BeforeEach
     void setUp() {
@@ -37,9 +40,9 @@ class NotificationServiceTest {
         notification = new Notification();
         notification.setId(UUID.randomUUID());
         notification.setUserId(userId);
-        notification.setTitle("Test Notification");
-        notification.setMessage("This is a test");
-        notification.setType("INFO");
+        notification.setTitle("Maintenance Update");
+        notification.setMessage("Your request is now in progress");
+        notification.setType("STATUS_UPDATE");
         notification.setIsRead(false);
         notification.setCreatedAt(LocalDateTime.now());
     }
@@ -48,33 +51,57 @@ class NotificationServiceTest {
     void createNotification_ShouldSaveAndReturnNotification() {
         when(notificationRepository.save(notification)).thenReturn(notification);
 
-        Notification result = notificationService.createNotification(notification);
+        Notification saved = notificationService.createNotification(notification);
 
-        assertNotNull(result);
-        assertEquals(notification.getId(), result.getId());
-        assertEquals("Test Notification", result.getTitle());
+        assertEquals(notification.getId(), saved.getId());
+        assertEquals(notification.getUserId(), saved.getUserId());
         verify(notificationRepository).save(notification);
     }
 
     @Test
-    void getNotificationsByUser_ShouldReturnOrderedNotifications() {
-        Notification second = new Notification();
-        second.setId(UUID.randomUUID());
-        second.setUserId(userId);
-        second.setTitle("Second Notification");
-        second.setMessage("Second message");
-        second.setType("INFO");
-        second.setIsRead(false);
-        second.setCreatedAt(LocalDateTime.now().minusHours(1));
+    void getNotificationsByUser_ShouldReturnPagedNotifications() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Notification> page = new PageImpl<>(List.of(notification), pageable, 1);
 
-        when(notificationRepository.findByUserIdOrderByCreatedAtDesc(userId))
-                .thenReturn(List.of(notification, second));
+        when(notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable))
+                .thenReturn(page);
 
-        List<Notification> result = notificationService.getNotificationsByUser(userId);
+        Page<Notification> result = notificationService.getNotificationsByUser(userId, pageable);
 
-        assertEquals(2, result.size());
-        assertEquals("Test Notification", result.get(0).getTitle());
-        assertEquals("Second Notification", result.get(1).getTitle());
-        verify(notificationRepository).findByUserIdOrderByCreatedAtDesc(userId);
+        assertEquals(1, result.getContent().size());
+        assertEquals(userId, result.getContent().get(0).getUserId());
+
+        verify(notificationRepository).findByUserIdOrderByCreatedAtDesc(userId, pageable);
+    }
+
+    @Test
+    void getNotificationsByUser_ShouldReturnEmptyPage_WhenNoNotificationsExist() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Notification> emptyPage = Page.empty(pageable);
+
+        when(notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable))
+                .thenReturn(emptyPage);
+
+        Page<Notification> result = notificationService.getNotificationsByUser(userId, pageable);
+
+        assertEquals(0, result.getContent().size());
+
+        verify(notificationRepository).findByUserIdOrderByCreatedAtDesc(userId, pageable);
+    }
+    
+    @Test
+    void getNotificationsByUser_ShouldPassCorrectPageableToRepository() {
+        Pageable pageable = PageRequest.of(2, 3);
+        Page<Notification> page = new PageImpl<>(List.of(notification), pageable, 1);
+
+        when(notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable))
+                .thenReturn(page);
+
+        Page<Notification> result = notificationService.getNotificationsByUser(userId, pageable);
+
+        assertEquals(2, result.getNumber());
+        assertEquals(3, result.getSize());
+
+        verify(notificationRepository).findByUserIdOrderByCreatedAtDesc(userId, pageable);
     }
 }
