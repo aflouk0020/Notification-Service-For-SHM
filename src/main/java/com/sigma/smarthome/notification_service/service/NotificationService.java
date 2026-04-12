@@ -11,4 +11,6 @@ public interface NotificationService {
     Notification createNotification(Notification notification);
 
     Page<Notification> getNotificationsByUser(UUID userId, Pageable pageable);
+    
+    Notification markAsRead(UUID id);
 }

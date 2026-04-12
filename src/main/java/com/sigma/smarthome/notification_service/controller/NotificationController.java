@@ -44,4 +44,21 @@ public class NotificationController {
                         notification.getCreatedAt()
                 ));
     }
+    
+    @PutMapping("/{id}/read")
+    public NotificationResponse markAsRead(@PathVariable UUID id) {
+        Notification notification = service.markAsRead(id);
+
+        return new NotificationResponse(
+                notification.getId(),
+                notification.getUserId(),
+                notification.getTitle(),
+                notification.getMessage(),
+                notification.getType(),
+                notification.getIsRead(),
+                notification.getCreatedAt()
+        );
+    }
+    
+    
 }

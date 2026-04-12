@@ -5,6 +5,7 @@ import com.sigma.smarthome.notification_service.repository.NotificationRepositor
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import java.util.NoSuchElementException;
 
 import java.util.UUID;
 
@@ -25,5 +26,14 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public Page<Notification> getNotificationsByUser(UUID userId, Pageable pageable) {
         return repository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
+    }
+    
+    @Override
+    public Notification markAsRead(UUID id) {
+        Notification notification = repository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Notification not found: " + id));
+
+        notification.setIsRead(true);
+        return repository.save(notification);
     }
 }
