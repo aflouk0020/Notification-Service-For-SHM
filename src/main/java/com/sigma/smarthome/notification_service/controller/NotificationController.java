@@ -21,8 +21,17 @@ public class NotificationController {
     }
 
     @PostMapping
-    public Notification create(@RequestBody Notification notification) {
-        return service.createNotification(notification);
+    public NotificationResponse create(@RequestBody Notification notification) {
+        Notification saved = service.createNotification(notification);
+        return new NotificationResponse(
+                saved.getId(),
+                saved.getUserId(),
+                saved.getTitle(),
+                saved.getMessage(),
+                saved.getType(),
+                saved.getIsRead(),
+                saved.getCreatedAt()
+        );
     }
 
     @GetMapping("/{userId}")

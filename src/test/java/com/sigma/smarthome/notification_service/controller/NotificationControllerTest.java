@@ -47,7 +47,7 @@ class NotificationControllerTest {
         Mockito.when(notificationService.createNotification(notification))
                 .thenReturn(notification);
 
-        Notification result = notificationController.create(notification);
+        NotificationResponse result = notificationController.create(notification);
 
         assertEquals(notification.getId(), result.getId());
         assertEquals(notification.getUserId(), result.getUserId());
